@@ -1,0 +1,301 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Harmonic Pattern Scanner API",
+        "description": "API for the Harmonic Pattern Scanner application",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000",
+            "description": "Development server"
+        }
+    ],
+    "paths": {
+        "/api/symbols": {
+            "get": {
+                "summary": "Get all supported symbols",
+                "description": "Returns a list of all supported symbols organized by market type",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "forex": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "crypto": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "metals": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "stocks": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            }
+        },
+        "/api/historical-data": {
+            "get": {
+                "summary": "Get historical price data",
+                "description": "Returns historical OHLC data for a given symbol and timeframe",
+                "parameters": [
+                    {
+                        "name": "symbol",
+                        "in": "query",
+                        "required": true,
+                        "description": "The trading symbol to get data for",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timeframe",
+                        "in": "query",
+                        "required": true,
+                        "description": "The timeframe for the data (e.g., 1m, 5m, 15m, 30m, 1h, 4h, 1d)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "market",
+                        "in": "query",
+                        "required": false,
+                        "description": "The market type (forex, crypto, stocks, metals)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "time": {
+                                                "type": "integer",
+                                                "description": "Timestamp in milliseconds"
+                                            },
+                                            "symbol": {
+                                                "type": "string",
+                                                "description": "Trading symbol"
+                                            },
+                                            "open": {
+                                                "type": "number",
+                                                "description": "Open price"
+                                            },
+                                            "high": {
+                                                "type": "number",
+                                                "description": "High price"
+                                            },
+                                            "low": {
+                                                "type": "number",
+                                                "description": "Low price"
+                                            },
+                                            "close": {
+                                                "type": "number",
+                                                "description": "Close price"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - missing required parameters"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            }
+        },
+        "/api/patterns": {
+            "get": {
+                "summary": "Get all detected patterns",
+                "description": "Returns all detected harmonic patterns that match the filter criteria",
+                "parameters": [
+                    {
+                        "name": "market",
+                        "in": "query",
+                        "required": false,
+                        "description": "Filter by market type (forex, crypto, stocks, metals)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timeframe",
+                        "in": "query",
+                        "required": false,
+                        "description": "Filter by timeframe (e.g., 1m, 5m, 15m, 30m, 1h, 4h, 1d)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "patternType",
+                        "in": "query",
+                        "required": false,
+                        "description": "Filter by pattern type (e.g., gartley, bat, butterfly, crab, abcd)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "symbol": {
+                                                "type": "string"
+                                            },
+                                            "pattern_type": {
+                                                "type": "string"
+                                            },
+                                            "direction": {
+                                                "type": "string"
+                                            },
+                                            "timeframe": {
+                                                "type": "string"
+                                            },
+                                            "confidence": {
+                                                "type": "number"
+                                            },
+                                            "prz": {
+                                                "type": "number"
+                                            },
+                                            "stop_loss": {
+                                                "type": "number"
+                                            },
+                                            "target": {
+                                                "type": "number"
+                                            },
+                                            "points": {
+                                                "type": "object"
+                                            },
+                                            "ratios": {
+                                                "type": "object"
+                                            },
+                                            "confirmation": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            }
+        },
+        "/api/test-rate-limit": {
+            "get": {
+                "summary": "Test API rate limiter",
+                "description": "Test endpoint that makes a specified number of API calls through the rate limiter",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of API calls to make (default: 3)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response showing rate limit information"
+                    }
+                }
+            }
+        },
+        "/api/cache-status": {
+            "get": {
+                "summary": "Get cache status",
+                "description": "Returns information about the current data cache state",
+                "responses": {
+                    "200": {
+                        "description": "Successful response with cache statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "cache": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "active": {
+                                                    "type": "integer"
+                                                },
+                                                "expired": {
+                                                    "type": "integer"
+                                                },
+                                                "defaultTTL": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {}
+    }
+}

@@ -1,0 +1,203 @@
+/* Main Styles for Harmonic Pattern Scanner */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7fa;
+    color: #333;
+}
+
+.header {
+    background-color: #2a2f38;
+    color: #fff;
+    padding: 15px 0;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin-bottom: 15px;
+}
+
+.filters {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filters .form-control {
+    width: auto;
+    display: inline-block;
+}
+
+.scanner-results {
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    height: 700px;
+    overflow-y: auto;
+}
+
+#tradingview-chart-container {
+    height: 700px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.loading-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 100;
+    font-size: 24px;
+    color: #2a2f38;
+}
+
+.bullish {
+    color: #2ecc71;
+}
+
+.bearish {
+    color: #e74c3c;
+}
+
+#patterns-table .btn {
+    padding: 2px 5px;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column-reverse;
+    }
+
+    .scanner-results,
+    #tradingview-chart-container {
+        height: 500px;
+        margin-bottom: 20px;
+    }
+}
+
+/* For even smaller screens */
+@media (max-width: 480px) {
+
+    .scanner-results,
+    #tradingview-chart-container {
+        height: 400px;
+    }
+}
+
+.pattern-details {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.pattern-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+    max-width: 300px;
+    pointer-events: none;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f7fd;
+    cursor: pointer;
+}
+
+/* Confirmation indicators styles */
+.indicators-info {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 5px;
+    padding: 15px;
+    z-index: 1000;
+    width: 250px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid #eee;
+}
+
+.indicators-info h5 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    font-weight: 600;
+    color: #2a2f38;
+}
+
+.indicators-info ul {
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+
+.indicators-info li {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.confidence-score {
+    font-weight: 600;
+    margin-bottom: 0;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+}
+
+.text-success {
+    color: #4caf50 !important;
+}
+
+.text-warning {
+    color: #ff9800 !important;
+}
+
+.text-danger {
+    color: #f44336 !important;
+}
+
+.text-muted {
+    color: #999 !important;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.pulse-animation {
+    animation: pulse 1.5s infinite;
+}
+
+/* API Status Indicator Styles */
+.api-notice {
+    margin: 10px 0;
+    padding: 8px;
+}
+
+#api-queue-badge {
+    font-size: 0.8rem;
+}

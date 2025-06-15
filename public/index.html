@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmonic Pattern Scanner</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/src/css/styles.css">
+    <!-- TradingView Widget API -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript"
+        src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-12">
+                <h1 class="text-center">Harmonic Pattern Scanner</h1>
+                <div id="api-notice" class="api-notice alert alert-info text-center">
+                    <strong>API Status:</strong> Using AlphaVantage API (5 requests/min, 500/day)
+                    <div class="progress mt-1" style="height: 8px;">
+                        <div id="api-usage-bar" class="progress-bar bg-info" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small id="api-rate-info">Rate limiting active to ensure optimal data retrieval</small>
+                    <span id="api-queue-badge" class="badge badge-pill badge-secondary ml-2" style="display: none;">0 in
+                        queue</span>
+                </div>
+                <div class="filters">
+                    <select id="market-type" class="form-control">
+                        <option value="forex">Forex</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="metals">Metals</option>
+                        <option value="stocks">Stocks</option>
+                    </select>
+                    <select id="timeframe" class="form-control">
+                        <option value="1m">1m</option>
+                        <option value="5m">5m</option>
+                        <option value="15m">15m</option>
+                        <option value="30m">30m</option>
+                        <option value="1h">1h</option>
+                        <option value="4h">4h</option>
+                        <option value="1d">1D</option>
+                    </select>
+                    <select id="pattern-type" class="form-control">
+                        <option value="all">All Patterns</option>
+                        <option value="gartley">Gartley</option>
+                        <option value="bat">Bat</option>
+                        <option value="butterfly">Butterfly</option>
+                        <option value="crab">Crab</option>
+                        <option value="abcd">ABCD</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row main-content">
+            <div class="col-md-4 scanner-results">
+                <h3>Detected Patterns</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="patterns-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Pattern</th>
+                                <th>Timeframe</th>
+                                <th>Direction</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patterns-list">
+                            <!-- Patterns will be populated here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div id="tradingview-chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/js/confirmationIndicators.js"></script>
+    <script src="src/js/harmonicPatterns.js"></script>
+    <script src="src/js/tradingViewChart.js"></script>
+    <script src="src/js/scanner.js"></script>
+    <script src="src/js/app.js"></script>
+</body>
+
+</html>

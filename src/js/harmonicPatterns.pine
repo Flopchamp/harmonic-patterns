@@ -1,0 +1,179 @@
+//@version=5
+indicator("Harmonic Pattern Scanner", overlay=true)
+
+// Input options
+patternType = input.string("All", "Pattern Type", options=["All", "Gartley", "Butterfly", "Bat", "Crab", "ABCD"])
+showLabels = input.bool(true, "Show Labels")
+bullishColor = input.color(color.green, "Bullish Pattern Color")
+bearishColor = input.color(color.red, "Bearish Pattern Color")
+labelSize = input.string("Small", "Label Size", options=["Tiny", "Small", "Normal", "Large"])
+
+// Fibonacci Ratio Constants
+fib_0_382 = 0.382
+fib_0_5 = 0.500
+fib_0_618 = 0.618
+fib_0_786 = 0.786
+fib_0_886 = 0.886
+fib_1_0 = 1.0
+fib_1_13 = 1.13
+fib_1_27 = 1.27
+fib_1_414 = 1.414
+fib_1_618 = 1.618
+fib_2_0 = 2.0
+fib_2_24 = 2.24
+fib_2_618 = 2.618
+fib_3_14 = 3.14
+fib_3_618 = 3.618
+
+// Function to check if a value is within a range
+inRange(val, min, max) => val >= min and val <= max
+
+// Calculate price swings to identify pattern points
+swingHigh(len) =>
+    high[len] > high[len+1] and high[len] > high[len-1] and high[len] > high[len+2] and high[len] > high[len-2]
+
+swingLow(len) =>
+    low[len] < low[len+1] and low[len] < low[len-1] and low[len] < low[len+2] and low[len] < low[len-2]
+
+// Calculate points for the patterns
+var float[] swingHighPrices = array.new_float(0)
+var float[] swingLowPrices = array.new_float(0)
+var int[] swingHighBars = array.new_int(0)
+var int[] swingLowBars = array.new_int(0)
+
+// Check for new swing highs and lows
+if swingHigh(2)
+    array.push(swingHighPrices, high[2])
+    array.push(swingHighBars, bar_index[2])
+    
+if swingLow(2)
+    array.push(swingLowPrices, low[2])
+    array.push(swingLowBars, bar_index[2])
+
+// Functions to detect different harmonic patterns
+detectBullishGartley() =>
+    result = false
+    
+    if array.size(swingLowPrices) >= 4 and array.size(swingHighPrices) >= 3
+        // Get the last 4 swing lows (X, A, C, D) and last 3 swing highs (prices between the swing lows)
+        D = array.get(swingLowPrices, array.size(swingLowPrices) - 1)
+        C = array.get(swingHighPrices, array.size(swingHighPrices) - 1)
+        B = array.get(swingLowPrices, array.size(swingLowPrices) - 2)
+        A = array.get(swingHighPrices, array.size(swingHighPrices) - 2)
+        X = array.get(swingLowPrices, array.size(swingLowPrices) - 3)
+        
+        // Bar indices for drawing
+        D_idx = array.get(swingLowBars, array.size(swingLowBars) - 1)
+        C_idx = array.get(swingHighBars, array.size(swingHighBars) - 1)
+        B_idx = array.get(swingLowBars, array.size(swingLowBars) - 2)
+        A_idx = array.get(swingHighBars, array.size(swingHighBars) - 2)
+        X_idx = array.get(swingLowBars, array.size(swingLowBars) - 3)
+        
+        // Calculate the ratios for Gartley pattern
+        AB = math.abs(B - A)
+        BC = math.abs(C - B)
+        CD = math.abs(D - C)
+        XA = math.abs(A - X)
+        AD = math.abs(D - A)
+        
+        AB_XA_ratio = AB / XA
+        BC_AB_ratio = BC / AB
+        CD_BC_ratio = CD / BC
+        AD_XA_ratio = AD / XA
+        
+        // Check Gartley conditions
+        if inRange(AB_XA_ratio, fib_0_618 - 0.02, fib_0_618 + 0.02) and
+           inRange(BC_AB_ratio, fib_0_382 - 0.02, fib_0_886 + 0.02) and
+           inRange(CD_BC_ratio, fib_1_27 - 0.02, fib_1_618 + 0.02) and
+           inRange(AD_XA_ratio, fib_0_786 - 0.02, fib_0_786 + 0.02)
+            
+            if showLabels
+                label.new(X_idx, X, "X", color=bullishColor, style=label.style_label_down, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(A_idx, A, "A", color=bullishColor, style=label.style_label_up, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(B_idx, B, "B", color=bullishColor, style=label.style_label_down, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(C_idx, C, "C", color=bullishColor, style=label.style_label_up, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(D_idx, D, "D (PRZ)", color=bullishColor, style=label.style_label_down, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                
+            line.new(X_idx, X, A_idx, A, color=bullishColor)
+            line.new(A_idx, A, B_idx, B, color=bullishColor)
+            line.new(B_idx, B, C_idx, C, color=bullishColor)
+            line.new(C_idx, C, D_idx, D, color=bullishColor)
+            
+            result := true
+    
+    result
+
+detectBearishGartley() =>
+    result = false
+    
+    if array.size(swingHighPrices) >= 4 and array.size(swingLowPrices) >= 3
+        // Get the last 4 swing highs (X, A, C, D) and last 3 swing lows (prices between the swing highs)
+        D = array.get(swingHighPrices, array.size(swingHighPrices) - 1)
+        C = array.get(swingLowPrices, array.size(swingLowPrices) - 1)
+        B = array.get(swingHighPrices, array.size(swingHighPrices) - 2)
+        A = array.get(swingLowPrices, array.size(swingLowPrices) - 2)
+        X = array.get(swingHighPrices, array.size(swingHighPrices) - 3)
+        
+        // Bar indices for drawing
+        D_idx = array.get(swingHighBars, array.size(swingHighBars) - 1)
+        C_idx = array.get(swingLowBars, array.size(swingLowBars) - 1)
+        B_idx = array.get(swingHighBars, array.size(swingHighBars) - 2)
+        A_idx = array.get(swingLowBars, array.size(swingLowBars) - 2)
+        X_idx = array.get(swingHighBars, array.size(swingHighBars) - 3)
+        
+        // Calculate the ratios for Gartley pattern
+        AB = math.abs(B - A)
+        BC = math.abs(C - B)
+        CD = math.abs(D - C)
+        XA = math.abs(A - X)
+        AD = math.abs(D - A)
+        
+        AB_XA_ratio = AB / XA
+        BC_AB_ratio = BC / AB
+        CD_BC_ratio = CD / BC
+        AD_XA_ratio = AD / XA
+        
+        // Check Gartley conditions
+        if inRange(AB_XA_ratio, fib_0_618 - 0.02, fib_0_618 + 0.02) and
+           inRange(BC_AB_ratio, fib_0_382 - 0.02, fib_0_886 + 0.02) and
+           inRange(CD_BC_ratio, fib_1_27 - 0.02, fib_1_618 + 0.02) and
+           inRange(AD_XA_ratio, fib_0_786 - 0.02, fib_0_786 + 0.02)
+            
+            if showLabels
+                label.new(X_idx, X, "X", color=bearishColor, style=label.style_label_up, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(A_idx, A, "A", color=bearishColor, style=label.style_label_down, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(B_idx, B, "B", color=bearishColor, style=label.style_label_up, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(C_idx, C, "C", color=bearishColor, style=label.style_label_down, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                label.new(D_idx, D, "D (PRZ)", color=bearishColor, style=label.style_label_up, size=labelSize == "Tiny" ? size.tiny : labelSize == "Small" ? size.small : labelSize == "Normal" ? size.normal : size.large)
+                
+            line.new(X_idx, X, A_idx, A, color=bearishColor)
+            line.new(A_idx, A, B_idx, B, color=bearishColor)
+            line.new(B_idx, B, C_idx, C, color=bearishColor)
+            line.new(C_idx, C, D_idx, D, color=bearishColor)
+            
+            result := true
+    
+    result
+
+// Similar detector functions would be implemented for other patterns: 
+// detectBullishButterfly(), detectBearishButterfly(), detectBullishBat(), etc.
+
+// Based on user selection, run the appropriate detection logic
+runDetection() =>
+    if patternType == "All" or patternType == "Gartley"
+        detectBullishGartley()
+        detectBearishGartley()
+    
+    // Add other pattern detection calls here
+    // if patternType == "All" or patternType == "Butterfly"
+    //     detectBullishButterfly()
+    //     detectBearishButterfly()
+    // etc.
+
+// Run the pattern detection logic
+runDetection()
+
+// Add alerts
+alertcondition(detectBullishGartley(), title="Bullish Gartley", message="Bullish Gartley Pattern Detected")
+alertcondition(detectBearishGartley(), title="Bearish Gartley", message="Bearish Gartley Pattern Detected")
+// Add more alert conditions for other patterns
