@@ -42,47 +42,136 @@
                         <option value="1h">1h</option>
                         <option value="4h">4h</option>
                         <option value="1d">1D</option>
-                    </select>
-                    <select id="pattern-type" class="form-control">
+                    </select> <select id="pattern-type" class="form-control">
                         <option value="all">All Patterns</option>
-                        <option value="gartley">Gartley</option>
-                        <option value="bat">Bat</option>
-                        <option value="butterfly">Butterfly</option>
-                        <option value="crab">Crab</option>
-                        <option value="abcd">ABCD</option>
+                        <optgroup label="Harmonic Patterns">
+                            <option value="gartley">Gartley</option>
+                            <option value="bat">Bat</option>
+                            <option value="butterfly">Butterfly</option>
+                            <option value="crab">Crab</option>
+                            <option value="abcd">ABCD</option>
+                        </optgroup>
+                        <optgroup label="Chart Patterns">
+                            <option value="head_and_shoulders">Head & Shoulders</option>
+                            <option value="triangle">Triangle</option>
+                            <option value="flag">Flag</option>
+                            <option value="wedge">Wedge</option>
+                            <option value="support">Support</option>
+                            <option value="resistance">Resistance</option>
+                        </optgroup>
+                        <optgroup label="Candlestick Patterns">
+                            <option value="doji">Doji</option>
+                            <option value="hammer">Hammer</option>
+                            <option value="shooting_star">Shooting Star</option>
+                            <option value="engulfing">Engulfing</option>
+                            <option value="harami">Harami</option>
+                            <option value="piercing">Piercing</option>
+                            <option value="dark_cloud_cover">Dark Cloud</option>
+                        </optgroup>
                     </select>
+                </div>
+
+                <!-- Enhanced Control Panel -->
+                <div class="col-md-2">
+                    <label>Symbol Analysis:</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="symbol-input" placeholder="EURUSD" value="EURUSD">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-info" type="button" id="multi-tf-btn"
+                                title="Multi-timeframe analysis">🔍</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scan Controls -->
+                <div class="col-md-2">
+                    <label>Scan Control:</label>
+                    <div class="btn-group-vertical btn-group-sm d-block">
+                        <button class="btn btn-primary" id="manual-scan-btn">Manual Scan</button>
+                        <button class="btn btn-danger" id="toggle-scan-btn">Stop Auto Scan</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Panel -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">📊 Scanner Statistics</h6>
+                        </div>
+                        <div class="card-body py-2">
+                            <div class="row text-center">
+                                <div class="col-md-2">
+                                    <strong id="scan-counter">Scan #0</strong>
+                                    <small class="text-muted d-block">Total Scans</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong id="patterns-counter">0 patterns</strong>
+                                    <small class="text-muted d-block">Found Total</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong id="last-scan-time">--:--:--</strong>
+                                    <small class="text-muted d-block">Last Scan</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong id="success-rate">100%</strong>
+                                    <small class="text-muted d-block">Success Rate</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <strong>1 min</strong>
+                                    <small class="text-muted d-block">Scan Interval</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-success">🟢 Active</span>
+                                    <small class="text-muted d-block">Scanner Status</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="row main-content">
-            <div class="col-md-4 scanner-results">
-                <h3>Detected Patterns</h3>
+            <div class="col-md-5 scanner-results">
+                <h4>🎯 Live Pattern Detection</h4>
                 <div class="table-responsive">
-                    <table class="table table-hover" id="patterns-table">
-                        <thead>
+                    <table class="table table-hover table-sm" id="patterns-table">
+                        <thead class="thead-dark">
                             <tr>
+                                <th>#</th>
                                 <th>Symbol</th>
                                 <th>Pattern</th>
-                                <th>Timeframe</th>
                                 <th>Direction</th>
-                                <th>Action</th>
+                                <th>PRZ</th>
+                                <th>SL</th>
+                                <th>TP</th>
+                                <th>Confidence</th>
                             </tr>
                         </thead>
                         <tbody id="patterns-list">
-                            <!-- Patterns will be populated here dynamically -->
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Initializing scanner...</span>
+                                    </div>
+                                    <div>Starting pattern detection...</div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-7">
                 <div id="tradingview-chart-container"></div>
             </div>
         </div>
     </div>
-
     <script src="src/js/confirmationIndicators.js"></script>
     <script src="src/js/harmonicPatterns.js"></script>
+    <script src="src/js/chartPatterns.js"></script>
+    <script src="src/js/candlestickPatterns.js"></script>
     <script src="src/js/tradingViewChart.js"></script>
     <script src="src/js/scanner.js"></script>
     <script src="src/js/app.js"></script>

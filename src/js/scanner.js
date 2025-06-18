@@ -5,17 +5,32 @@
  * to detect harmonic patterns across different markets and timeframes.
  */
 
-class Scanner {
-    constructor() {
+class Scanner {    constructor() {
         this.harmonicPatterns = new HarmonicPatterns();
+        
+        // Initialize new pattern detection engines
+        if (typeof ChartPatterns !== 'undefined') {
+            this.chartPatterns = new ChartPatterns();
+        }
+        if (typeof CandlestickPatterns !== 'undefined') {
+            this.candlestickPatterns = new CandlestickPatterns();
+        }
+        
         this.scanResults = [];
         this.scanInterval = null;
+        this.isScanning = false;
+        this.scanCount = 0;
+        this.lastScanTime = null;
+        
+        // Enhanced market definitions with more symbols
         this.markets = {
-            forex: ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'EURGBP', 'EURJPY'],
-            crypto: ['BTCUSD', 'ETHUSD', 'XRPUSD', 'LTCUSD', 'BCHUSD', 'ADAUSD', 'DOTUSD'],
-            metals: ['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD'],
-            stocks: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'FB', 'TSLA', 'NVDA']
+            forex: ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'EURGBP', 'EURJPY', 'GBPJPY', 'AUDJPY', 'NZDUSD'],
+            crypto: ['BTCUSD', 'ETHUSD', 'XRPUSD', 'LTCUSD', 'BCHUSD', 'ADAUSD', 'DOTUSD', 'LINKUSD', 'MATICUSD', 'AVAXUSD'],
+            metals: ['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD', 'COPPER', 'PALLADIUM'],
+            stocks: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'NFLX', 'BABA', 'AMD']
         };
+        
+        // All supported timeframes
         this.timeframes = {
             '1m': 1,
             '5m': 5,
@@ -23,10 +38,22 @@ class Scanner {
             '30m': 30,
             '1h': 60,
             '4h': 240,
-            '1d': 1440
+            '12h': 720,
+            '1d': 1440,
+            '1w': 10080
         };
+        
         this.currentMarket = 'forex';
-        this.currentTimeframe = '1h';
+        this.currentTimeframe = '1m'; // Default to 1-minute for frequent scanning
+        
+        // Enhanced logging and statistics
+        this.scanStats = {
+            totalScans: 0,
+            patternsFound: 0,
+            lastPatternTime: null,
+            scanDuration: 0,
+            errorCount: 0
+        };
     }
 
     // Set the market type to scan
@@ -247,73 +274,279 @@ class Scanner {
             });
         }
           return data;
-    }    // Run a single scan for patterns
+    }    // Run a single comprehensive scan for all patterns
     async runScan() {
-        this.scanResults = [];
-        const symbols = this.markets[this.currentMarket];
-        
-        console.log(`Running scan for ${this.currentMarket} on ${this.currentTimeframe} timeframe...`);
-        
-        // Loop through all symbols in the current market
-        for (const symbol of symbols) {
-            console.log(`Scanning ${symbol}...`);
-            const data = await this.fetchHistoricalData(symbol, this.currentTimeframe);
-            
-            // Skip if no data
-            if (data.length === 0) {
-                console.log(`No data available for ${symbol}`);
-                continue;
-            }
-            
-            console.log(`Analyzing ${data.length} candles for ${symbol}`);
-            
-            // Scan for harmonic patterns
-            const patterns = this.harmonicPatterns.scanForPatterns(data);
-            
-            // Log detailed pattern counts by type
-            if (patterns.length > 0) {
-                const patternTypes = {};
-                patterns.forEach(p => {
-                    if (!patternTypes[p.pattern]) patternTypes[p.pattern] = 0;
-                    patternTypes[p.pattern]++;
-                });
-                
-                console.log(`Found ${patterns.length} patterns for ${symbol}:`);
-                Object.entries(patternTypes).forEach(([pattern, count]) => {
-                    console.log(`- ${pattern}: ${count}`);
-                });
-                
-                this.scanResults.push(...patterns);
-            } else {
-                console.log(`No patterns detected for ${symbol}`);
-            }
+        if (this.isScanning) {
+            console.log('⏳ Scan already in progress, skipping...');
+            return;
         }
         
-        // Log all results
-        console.log(`Scan complete. Found ${this.scanResults.length} patterns.`);
+        this.isScanning = true;
+        const scanStartTime = Date.now();
+        this.scanCount++;
+        this.lastScanTime = new Date().toISOString();
         
-        // Trigger an event to notify that scan is complete
-        const scanCompleteEvent = new CustomEvent('scanComplete', { 
-            detail: { results: this.scanResults }
-        });
-        document.dispatchEvent(scanCompleteEvent);
+        console.log('\n🔍 ================================');
+        console.log(`   HARMONIC PATTERN SCANNER v2.0`);
+        console.log('🔍 ================================');
+        console.log(`📊 Scan #${this.scanCount} | ${new Date().toLocaleTimeString()}`);
+        console.log(`🌍 Market: ${this.currentMarket.toUpperCase()} | ⏱️ Timeframe: ${this.currentTimeframe}`);
+        console.log(`📈 Symbols: ${this.markets[this.currentMarket].length} | 🎯 Patterns: Harmonic + Chart + Candlestick`);
+        console.log('─'.repeat(70));
+        
+        this.scanResults = [];
+        const symbols = this.markets[this.currentMarket];
+        let totalPatterns = 0;
+        let processedSymbols = 0;
+        
+        try {
+            // Process each symbol in the current market
+            for (const symbol of symbols) {
+                try {
+                    const data = await this.fetchHistoricalData(symbol, this.currentTimeframe);
+                    
+                    if (data.length === 0) {
+                        console.log(`⚠️  ${symbol}: No data available`);
+                        continue;
+                    }
+                    
+                    processedSymbols++;
+                    console.log(`📋 ${symbol}: Analyzing ${data.length} candles...`);
+                    
+                    // Run all pattern detection engines
+                    const harmonicPatterns = this.harmonicPatterns.scanForPatterns(data);
+                    const chartPatterns = this.chartPatterns ? this.chartPatterns.scanForChartPatterns(data) : [];
+                    const candlestickPatterns = this.candlestickPatterns ? this.candlestickPatterns.scanForCandlestickPatterns(data) : [];
+                    
+                    // Combine and enhance pattern data
+                    const allPatterns = [...harmonicPatterns, ...chartPatterns, ...candlestickPatterns];
+                    
+                    // Add metadata to each pattern
+                    allPatterns.forEach(pattern => {
+                        pattern.symbol = symbol;
+                        pattern.timestamp = data[data.length - 1].time;
+                        pattern.timeframe = this.currentTimeframe;
+                        pattern.market = this.currentMarket;
+                        pattern.scanId = this.scanCount;
+                        
+                        // Enhance pattern with additional analysis
+                        pattern = this.enhancePatternData(pattern, data);
+                    });
+                    
+                    // Log pattern findings for this symbol
+                    if (allPatterns.length > 0) {
+                        console.log(`✅ ${symbol}: Found ${allPatterns.length} patterns`);
+                        
+                        // Group patterns by type for cleaner display
+                        const patternGroups = this.groupPatternsByType(allPatterns);
+                        Object.entries(patternGroups).forEach(([type, patterns]) => {
+                            console.log(`   ${this.getPatternTypeIcon(type)} ${type}: ${patterns.length} patterns`);
+                            patterns.forEach(p => {
+                                console.log(`      ├─ ${p.pattern} (${p.direction}) PRZ: ${p.prz.toFixed(4)} | SL: ${p.stopLoss?.toFixed(4) || 'N/A'} | TP: ${p.takeProfit?.toFixed(4) || 'N/A'}`);
+                            });
+                        });
+                        
+                        totalPatterns += allPatterns.length;
+                        this.scanResults.push(...allPatterns);
+                    } else {
+                        console.log(`🔍 ${symbol}: No patterns detected`);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ ${symbol}: Error during analysis - ${error.message}`);
+                    this.scanStats.errorCount++;
+                }
+            }            
+            // Generate comprehensive scan summary
+            this.generateScanSummary(scanStartTime, processedSymbols, totalPatterns);
+            
+        } catch (error) {
+            console.error('❌ Critical scan error:', error);
+            this.scanStats.errorCount++;
+        } finally {
+            this.isScanning = false;
+        }
         
         return this.scanResults;
     }
 
-    // Start continuous scanning
+    // Enhanced pattern data with additional analysis
+    enhancePatternData(pattern, data) {
+        try {
+            // Calculate more accurate PRZ levels
+            if (pattern.prz) {
+                // Add stop loss and take profit levels
+                const atr = this.calculateATR(data, 14);
+                const riskMultiplier = 1.5;
+                const rewardMultiplier = 2.0;
+                
+                if (pattern.direction === 'bullish') {
+                    pattern.stopLoss = pattern.prz - (atr * riskMultiplier);
+                    pattern.takeProfit = pattern.prz + (atr * rewardMultiplier);
+                } else if (pattern.direction === 'bearish') {
+                    pattern.stopLoss = pattern.prz + (atr * riskMultiplier);
+                    pattern.takeProfit = pattern.prz - (atr * rewardMultiplier);
+                }
+                
+                // Calculate risk-reward ratio
+                const risk = Math.abs(pattern.prz - pattern.stopLoss);
+                const reward = Math.abs(pattern.takeProfit - pattern.prz);
+                pattern.riskRewardRatio = reward / risk;
+            }
+            
+            // Add pattern strength/confidence score
+            pattern.confidence = this.calculatePatternConfidence(pattern, data);
+            
+        } catch (error) {
+            console.warn(`Error enhancing pattern data: ${error.message}`);
+        }
+        
+        return pattern;
+    }
+
+    // Calculate Average True Range for better SL/TP levels
+    calculateATR(data, period = 14) {
+        if (data.length < period + 1) return 0.001; // Default fallback
+        
+        let trueRanges = [];
+        for (let i = 1; i < data.length; i++) {
+            const high = data[i].high;
+            const low = data[i].low;
+            const prevClose = data[i - 1].close;
+            
+            const tr = Math.max(
+                high - low,
+                Math.abs(high - prevClose),
+                Math.abs(low - prevClose)
+            );
+            trueRanges.push(tr);
+        }
+        
+        // Calculate ATR (simple moving average of true ranges)
+        const atrPeriod = Math.min(period, trueRanges.length);
+        const recentTR = trueRanges.slice(-atrPeriod);
+        return recentTR.reduce((sum, tr) => sum + tr, 0) / atrPeriod;
+    }
+
+    // Calculate pattern confidence score
+    calculatePatternConfidence(pattern, data) {
+        let confidence = 0.5; // Base confidence
+        
+        // Adjust based on pattern type
+        if (pattern.pattern === 'gartley' || pattern.pattern === 'butterfly') {
+            confidence += 0.2; // Higher confidence for classic harmonics
+        }
+        if (pattern.pattern === 'head_and_shoulders') {
+            confidence += 0.15; // Strong reversal pattern
+        }
+        if (pattern.pattern === 'doji') {
+            confidence += 0.1; // Reversal signal
+        }
+        
+        // Adjust based on volume (if available)
+        if (data.length > 0 && data[data.length - 1].volume) {
+            const avgVolume = data.slice(-20).reduce((sum, d) => sum + (d.volume || 0), 0) / 20;
+            const currentVolume = data[data.length - 1].volume;
+            if (currentVolume > avgVolume * 1.5) {
+                confidence += 0.1; // Higher volume confirmation
+            }
+        }
+        
+        return Math.min(0.95, Math.max(0.1, confidence)); // Clamp between 0.1 and 0.95
+    }
+
+    // Group patterns by type for cleaner display
+    groupPatternsByType(patterns) {
+        const groups = {
+            'Harmonic': [],
+            'Chart': [],
+            'Candlestick': []
+        };
+        
+        patterns.forEach(pattern => {
+            if (['gartley', 'butterfly', 'bat', 'crab', 'abcd'].includes(pattern.pattern)) {
+                groups.Harmonic.push(pattern);
+            } else if (['head_and_shoulders', 'triangle', 'flag', 'support', 'resistance'].includes(pattern.pattern)) {
+                groups.Chart.push(pattern);
+            } else {
+                groups.Candlestick.push(pattern);
+            }
+        });
+        
+        // Remove empty groups
+        Object.keys(groups).forEach(key => {
+            if (groups[key].length === 0) delete groups[key];
+        });
+        
+        return groups;
+    }
+
+    // Get emoji icon for pattern type
+    getPatternTypeIcon(type) {
+        const icons = {
+            'Harmonic': '🔹',
+            'Chart': '📊',
+            'Candlestick': '🕯️'
+        };
+        return icons[type] || '📈';
+    }
+
+    // Generate comprehensive scan summary
+    generateScanSummary(scanStartTime, processedSymbols, totalPatterns) {
+        const scanDuration = Date.now() - scanStartTime;
+        this.scanStats.totalScans++;
+        this.scanStats.patternsFound += totalPatterns;
+        this.scanStats.scanDuration = scanDuration;
+        
+        if (totalPatterns > 0) {
+            this.scanStats.lastPatternTime = new Date().toISOString();
+        }
+        
+        console.log('\n📊 ================================');
+        console.log('   SCAN SUMMARY & STATISTICS');
+        console.log('📊 ================================');
+        console.log(`⏱️  Scan Duration: ${scanDuration}ms`);
+        console.log(`🎯 Symbols Processed: ${processedSymbols}/${this.markets[this.currentMarket].length}`);
+        console.log(`📈 Total Patterns Found: ${totalPatterns}`);
+        console.log(`🔢 Scan Statistics:`);
+        console.log(`   ├─ Total Scans: ${this.scanStats.totalScans}`);
+        console.log(`   ├─ Total Patterns: ${this.scanStats.patternsFound}`);
+        console.log(`   ├─ Success Rate: ${((this.scanStats.totalScans - this.scanStats.errorCount) / this.scanStats.totalScans * 100).toFixed(1)}%`);
+        console.log(`   └─ Avg Patterns/Scan: ${(this.scanStats.patternsFound / this.scanStats.totalScans).toFixed(1)}`);
+        
+        if (totalPatterns > 0) {
+            console.log(`\n🎯 TOP PATTERNS THIS SCAN:`);
+            const topPatterns = this.scanResults
+                .sort((a, b) => (b.confidence || 0.5) - (a.confidence || 0.5))
+                .slice(0, 5);
+                
+            topPatterns.forEach((pattern, index) => {
+                console.log(`   ${index + 1}. ${pattern.symbol} - ${pattern.pattern.toUpperCase()} (${pattern.direction})`);
+                console.log(`      PRZ: ${pattern.prz.toFixed(4)} | Confidence: ${((pattern.confidence || 0.5) * 100).toFixed(1)}%`);
+            });
+        }
+          console.log('─'.repeat(70));
+        console.log(`⏰ Next scan: ${this.scanInterval ? 'in 1 minute' : 'manual'}\n`);
+    }
+
+    // Start continuous scanning every minute (or specified interval)
     startScanning(intervalMinutes = 1) {
         // Clear any existing interval
         this.stopScanning();
+        
+        console.log(`🚀 Starting continuous pattern scanning every ${intervalMinutes} minute(s)...`);
         
         // Run an initial scan
         this.runScan();
         
         // Set up recurring scans
         const intervalMs = intervalMinutes * 60 * 1000;
-        this.scanInterval = setInterval(() => this.runScan(), intervalMs);
+        this.scanInterval = setInterval(() => {
+            console.log('\n⏰ Auto-scan triggered...');
+            this.runScan();
+        }, intervalMs);
         
-        console.log(`Started automatic scanning every ${intervalMinutes} minute(s)`);
+        console.log(`✅ Automatic scanning started - every ${intervalMinutes} minute(s)`);
     }
 
     // Stop continuous scanning
@@ -321,37 +554,81 @@ class Scanner {
         if (this.scanInterval) {
             clearInterval(this.scanInterval);
             this.scanInterval = null;
-            console.log('Stopped automatic scanning');
+            console.log('🛑 Stopped automatic scanning');
         }
     }
 
     // Get the latest scan results
     getResults() {
         return this.scanResults;
-    }    // Filter results by pattern type
+    }
+
+    // Filter results by pattern type
     filterResultsByPattern(patternType) {
         if (patternType === 'all') {
-            console.log(`Showing all patterns: ${this.scanResults.length} total`);
+            console.log(`📊 Showing all patterns: ${this.scanResults.length} total`);
             return this.scanResults;
         }
         
         const filtered = this.scanResults.filter(result => result.pattern === patternType);
-        console.log(`Filtering for ${patternType} patterns: ${filtered.length} of ${this.scanResults.length} total`);
+        console.log(`🔍 Filtering for ${patternType} patterns: ${filtered.length} of ${this.scanResults.length} total`);
         
         // Log all available patterns if none matched the filter
         if (filtered.length === 0 && this.scanResults.length > 0) {
-            console.log('Available patterns in results:');
+            console.log('📋 Available patterns in results:');
             const patternTypes = {};
             this.scanResults.forEach(p => {
                 if (!patternTypes[p.pattern]) patternTypes[p.pattern] = 0;
                 patternTypes[p.pattern]++;
             });
             Object.entries(patternTypes).forEach(([pattern, count]) => {
-                console.log(`- ${pattern}: ${count}`);
+                console.log(`  • ${pattern}: ${count}`);
             });
         }
         
         return filtered;
+    }
+
+    // Multi-timeframe analysis
+    async runMultiTimeframeAnalysis(symbol) {
+        const timeframes = ['5m', '15m', '1h', '4h'];
+        const results = {};
+        
+        console.log(`🔍 Multi-timeframe analysis for ${symbol}:`);
+        
+        for (const tf of timeframes) {
+            const originalTf = this.currentTimeframe;
+            this.setTimeframe(tf);
+            
+            const data = await this.fetchHistoricalData(symbol, tf);
+            if (data.length > 0) {
+                const harmonicPatterns = this.harmonicPatterns.scanForPatterns(data);
+                const chartPatterns = this.chartPatterns ? this.chartPatterns.scanForChartPatterns(data) : [];
+                const candlestickPatterns = this.candlestickPatterns ? this.candlestickPatterns.scanForCandlestickPatterns(data) : [];
+                
+                const allPatterns = [...harmonicPatterns, ...chartPatterns, ...candlestickPatterns];
+                results[tf] = allPatterns;
+                
+                console.log(`  ${tf}: ${allPatterns.length} patterns`);
+            }
+            
+            // Restore original timeframe
+            this.setTimeframe(originalTf);
+        }
+        
+        return results;
+    }
+
+    // Get scan statistics
+    getScanStatistics() {
+        return {
+            ...this.scanStats,
+            currentMarket: this.currentMarket,
+            currentTimeframe: this.currentTimeframe,
+            isScanning: this.isScanning,
+            lastScanTime: this.lastScanTime,
+            totalSymbols: this.markets[this.currentMarket].length
+        };
     }
 }
 

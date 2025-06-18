@@ -198,6 +198,109 @@ body {
     padding: 8px;
 }
 
-#api-queue-badge {
-    font-size: 0.8rem;
+/* Enhanced Pattern Scanner Styles */
+.confidence-bar {
+    width: 50px;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.confidence-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.confidence-success {
+    background-color: #28a745;
+}
+
+.confidence-warning {
+    background-color: #ffc107;
+}
+
+.confidence-secondary {
+    background-color: #6c757d;
+}
+
+.direction-bullish {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.direction-bearish {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.direction-reversal {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.direction-continuation {
+    color: #6f42c1;
+    font-weight: bold;
+}
+
+.pattern-name {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+/* Enhanced table styling */
+#patterns-table {
+    font-size: 0.875rem;
+}
+
+#patterns-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+#patterns-table tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.scanner-results {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Statistics panel styling */
+.card.border-info {
+    border-width: 2px;
+}
+
+.btn-group-vertical .btn {
+    margin-bottom: 2px;
+}
+
+/* Loading states */
+.loading-indicator {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+}
+
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+
+    .main-content .col-md-5,
+    .main-content .col-md-7 {
+        margin-bottom: 20px;
+    }
+
+    .filters select {
+        margin-bottom: 10px;
+    }
 }
